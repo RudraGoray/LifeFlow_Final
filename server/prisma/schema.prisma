@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────
+
+enum Role {
+  HOSPITAL
+  NGO
+  BLOODBANK
+  ADMIN
+}
+
+enum OrgType {
+  HOSPITAL
+  NGO
+}
+
+enum BloodType {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+}
+
+enum TicketStatus {
+  PENDING
+  CONFIRMED
+  FULFILLED
+  REJECTED
+  EXPIRED
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum StockLevel {
+  ADEQUATE
+  LOW
+  CRITICAL
+}
+
+// ─── Models ─────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          Role
+  orgId         String?
+  state         String
+  cityDistrict  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organization  Organization? @relation(fields: [orgId], references: [id])
+}
+
+model Organization {
+  id            String   @id @default(uuid())
+  name          String
+  type          OrgType
+  address       String
+  state         String
+  cityDistrict  String
+  phone         String
+  lat           Float?
+  lng           Float?
+  createdAt     DateTime @default(now())
+
+  users         User[]
+}
+
+model Donor {
+  donorId       String    @id @default(uuid())
+  name          String
+  contactNumber String
+  bloodType     BloodType
+  state         String
+  cityDistrict  String
+  registeredAt  DateTime  @default(now())
+
+  bloodRecords  Blood[]
+}
+
+model BloodBank {
+  bloodBankId    String   @id @default(uuid())
+  name           String
+  address        String
+  contactNumber  String
+  state          String
+  cityDistrict   String
+  lat            Float?
+  lng            Float?
+  createdAt      DateTime @default(now())
+
+  bloodRecords   Blood[]
+  inventory      BloodInventory[]
+  donationBatches DonationBatch[]  @relation("ReceivingBank")
+}
+
+model Blood {
+  bloodId        String       @id @default(uuid())
+  bloodBankId    String
+  donorId        String?
+  state          String
+  cityDistrict   String
+  bloodType      BloodType
+  dateDonated    DateTime?
+  dateDemanded   DateTime?
+  status         TicketStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+
+  bloodBank      BloodBank    @relation(fields: [bloodBankId], references: [bloodBankId])
+  donor          Donor?       @relation(fields: [donorId], references: [donorId])
+  demandTickets  DemandTicket[]
+  donationBatches DonationBatch[]
+}
+
+model DemandTicket {
+  id             String       @id @default(uuid())
+  hospitalId     String
+  bloodId        String?
+  bloodType      BloodType
+  units          Int
+  urgency        Urgency      @default(MEDIUM)
+  department     String?
+  requiredBy     DateTime?
+  patientRefId   String?
+  diagnosis      String?
+  notes          String?
+  status         TicketStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  blood          Blood?       @relation(fields: [bloodId], references: [bloodId])
+}
+
+model DonationBatch {
+  id              String       @id @default(uuid())
+  ngoId           String
+  bloodId         String?
+  campName        String
+  location        String
+  date            DateTime
+  bloodType       BloodType
+  units           Int
+  donorCount      Int          @default(0)
+  receivingBankId String
+  lotRef          String?
+  notes           String?
+  status          TicketStatus @default(PENDING)
+  submittedAt     DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  blood           Blood?       @relation(fields: [bloodId], references: [bloodId])
+  receivingBank   BloodBank    @relation("ReceivingBank", fields: [receivingBankId], references: [bloodBankId])
+}
+
+model BloodInventory {
+  id            String     @id @default(uuid())
+  bloodBankId   String
+  bloodType     BloodType
+  units         Int        @default(0)
+  statusLevel   StockLevel @default(ADEQUATE)
+  updatedAt     DateTime   @updatedAt
+
+  bloodBank     BloodBank  @relation(fields: [bloodBankId], references: [bloodBankId])
+
+  @@unique([bloodBankId, bloodType])
+}
+
+model Camp {
+  id            String   @id @default(uuid())
+  name          String
+  venue         String
+  organizer     String
+  date          DateTime
+  startTime     String
+  endTime       String
+  tagType       String?
+  state         String
+  cityDistrict  String
+  createdAt     DateTime @default(now())
+}
+
+model StatsSnapshot {
+  id            String    @id @default(uuid())
+  month         DateTime
+  state         String
+  cityDistrict  String
+  bloodType     BloodType
+  donated       Int       @default(0)
+  demanded      Int       @default(0)
+  forecast      Int       @default(0)
+
+  @@unique([month, state, cityDistrict, bloodType])
+}
