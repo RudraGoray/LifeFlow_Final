@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -21,7 +21,7 @@ import PulseIndicator from '../components/PulseIndicator'
 import MagneticButton from '../components/MagneticButton'
 import { useAuth } from '../context/AuthContext'
 
-// ─── Persona Configurations (Zero Emojis, Bespoke Line Icons) ──────────────
+// â”€â”€â”€ Persona Configurations (Zero Emojis, Bespoke Line Icons) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ROLES = [
   {
@@ -56,7 +56,7 @@ const ROLES = [
   },
 ]
 
-// ─── Brand Telemetry Panel (Left Column) ────────────────────────────────────
+// â”€â”€â”€ Brand Telemetry Panel (Left Column) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BrandPanel({ activeRole }) {
   const Icon = activeRole.icon
@@ -175,7 +175,7 @@ function BrandPanel({ activeRole }) {
   )
 }
 
-// ─── Login Form Panel (Right Column) ────────────────────────────────────────
+// â”€â”€â”€ Login Form Panel (Right Column) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function LoginForm({ activeRole, setActiveRole }) {
   const navigate = useNavigate()
@@ -198,14 +198,14 @@ function LoginForm({ activeRole, setActiveRole }) {
     setError('')
     setLoading(true)
 
-    // Simulate verified handshake
-    await new Promise((r) => setTimeout(r, 1100))
-    login(activeRole.id, {
-      email,
-      name: `${activeRole.label} Administrator`,
-      organization: activeRole.label,
-    })
-    navigate('/dashboard')
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message || 'Invalid email or password.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -377,7 +377,7 @@ function LoginForm({ activeRole, setActiveRole }) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Authenticating credentials…
+                    Authenticating credentialsâ€¦
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
@@ -431,7 +431,7 @@ function LoginForm({ activeRole, setActiveRole }) {
   )
 }
 
-// ─── Main Login Page ────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Login Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Login() {
   const location = useLocation()
@@ -447,3 +447,5 @@ export default function Login() {
     </div>
   )
 }
+
+

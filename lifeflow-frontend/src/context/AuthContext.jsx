@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react'
+﻿import React, { createContext, useContext, useState, useEffect } from 'react'
+import { api } from '../lib/api'
 
 const AuthContext = createContext(null)
 
@@ -35,19 +36,49 @@ export const ROLE_META = {
 export function AuthProvider({ children }) {
   const [role, setRole] = useState(null)
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const login = (selectedRole, userData = {}) => {
-    setRole(selectedRole)
-    setUser({ name: 'Admin User', email: 'admin@lifeflow.in', ...userData })
+  useEffect(() => {
+    const token = localStorage.getItem('lifeflow_token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+    api.me()
+      .then(({ user }) => {
+        setUser(user)
+        setRole(user.role)
+      })
+      .catch(() => {
+        localStorage.removeItem('lifeflow_token')
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const login = async (email, password) => {
+    const { token, user } = await api.login(email, password)
+    localStorage.setItem('lifeflow_token', token)
+    setUser(user)
+    setRole(user.role)
+    return user
+  }
+
+  const register = async ({ name, email, password, role, orgName }) => {
+    const { token, user } = await api.register({ name, email, password, role, orgName })
+    localStorage.setItem('lifeflow_token', token)
+    setUser(user)
+    setRole(user.role)
+    return user
   }
 
   const logout = () => {
+    localStorage.removeItem('lifeflow_token')
     setRole(null)
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ role, user, login, logout, ROLES, ROLE_META }}>
+    <AuthContext.Provider value={{ role, user, login, register, logout, loading, ROLES, ROLE_META }}>
       {children}
     </AuthContext.Provider>
   )
