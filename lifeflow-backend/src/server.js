@@ -4,7 +4,17 @@ const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 
-require('./db') // ensure schema is created on boot
+const db = require('./db') // ensure schema is created on boot
+
+// Auto-seed on startup if the DB is empty. This matters on free hosting tiers
+// (e.g. Render's free plan) where the filesystem resets on every restart or
+// redeploy, wiping the SQLite file. Re-seeding here means the app self-heals
+// with demo data every time it boots, without needing shell access.
+const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c
+if (userCount === 0) {
+  console.log('No users found in DB — running seed...')
+  require('./seed')
+}
 
 const authRoutes = require('./routes/auth.routes')
 const bloodBanksRoutes = require('./routes/bloodBanks.routes')
