@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  body {
+    background-color: #FAF6F2;
+    color: #181516;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(196, 30, 58, 0.12);
+    color: #9E152D;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom tactile warm scrollbar */
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #FAF6F2;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #DFD6CC;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C41E3A;
+  }
+}
+
+@layer components {
+  /* ─── Hand-Crafted Cards ────────────────────────────────────────── */
+  .card-crafted {
+    background: #FFFFFF;
+    border: 1px solid #EBE3DA;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(24, 21, 22, 0.04), 0 6px 20px rgba(24, 21, 22, 0.03);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-crafted:hover {
+    border-color: #DDD3C7;
+    box-shadow: 0 2px 6px rgba(24, 21, 22, 0.04), 0 16px 36px rgba(24, 21, 22, 0.07);
+    transform: translateY(-2px);
+  }
+
+  .card-crafted-flat {
+    background: #FFFFFF;
+    border: 1px solid #EBE3DA;
+    border-radius: 1rem;
+  }
+
+  .card-crafted-tint {
+    background: #FAF6F2;
+    border: 1px solid #EAE1D7;
+    border-radius: 1rem;
+  }
+
+  /* ─── Button Architecture ────────────────────────────────────────── */
+  .btn-crimson {
+    background-color: #C41E3A;
+    color: #FFFFFF;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(196, 30, 58, 0.25);
+    transition: all 0.2s ease;
+  }
+  .btn-crimson:hover {
+    background-color: #9E152D;
+    box-shadow: 0 8px 24px -4px rgba(196, 30, 58, 0.35);
+  }
+  .btn-crimson:active {
+    transform: scale(0.98);
+  }
+  .btn-crimson:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-outline {
+    background-color: #FFFFFF;
+    color: #181516;
+    border: 1px solid #EBE3DA;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 1px 2px rgba(24, 21, 22, 0.04), 0 2px 6px rgba(24, 21, 22, 0.02);
+    transition: all 0.2s ease;
+  }
+  .btn-outline:hover {
+    background-color: #FAF6F2;
+    border-color: #78716C;
+  }
+  .btn-outline:active {
+    transform: scale(0.98);
+  }
+
+  .btn-ghost {
+    color: #57534E;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease;
+  }
+  .btn-ghost:hover {
+    color: #181516;
+    background-color: rgba(245, 239, 235, 0.7);
+  }
+
+  /* ─── Form Inputs ───────────────────────────────────────────────── */
+  .input-field {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #EBE3DA;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #181516;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+  }
+  .input-field::placeholder {
+    color: #A8A29E;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #C41E3A;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.15);
+  }
+
+  /* ─── Badge System ──────────────────────────────────────────────── */
+  .badge-critical {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    background-color: #FFF1F3;
+    color: #9E152D;
+    border: 1px solid #FECDD6;
+  }
+
+  .badge-warning {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    background-color: #FFFBEB;
+    color: #D97706;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+  }
+
+  .badge-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    background-color: #ECFDF5;
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.25);
+  }
+
+  .badge-neutral {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    background-color: #F5EFEB;
+    color: #57534E;
+    border: 1px solid #EBE3DA;
+  }
+}
+
+@layer utilities {
+  /* ─── Typography Moments ────────────────────────────────────────── */
+  .text-stroke-hero {
+    -webkit-text-stroke: 1.5px rgba(24, 21, 22, 0.08);
+    color: transparent;
+    user-select: none;
+  }
+
+  .text-stroke-crimson {
+    -webkit-text-stroke: 1px rgba(196, 30, 58, 0.25);
+    color: transparent;
+  }
+
+  .text-gradient-crimson {
+    background: linear-gradient(135deg, #C41E3A 0%, #D42845 50%, #FF6B6B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-grid-warm {
+    background-image:
+      linear-gradient(to right, rgba(24, 21, 22, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(24, 21, 22, 0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+
