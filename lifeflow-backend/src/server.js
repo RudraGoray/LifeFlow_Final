@@ -26,7 +26,23 @@ const analyticsRoutes = require('./routes/analytics.routes')
 const app = express()
 const PORT = process.env.PORT || 4000
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }))
+// CORS_ORIGIN can be a single origin or a comma-separated list, e.g.
+// "http://localhost:5173,https://life-flow-final.vercel.app"
+// Set it to "*" to allow any origin.
+const allowedOrigins = (process.env.CORS_ORIGIN || '*')
+  .split(',')
+  .map((o) => o.trim())
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}))
+
 app.use(express.json())
 app.use(morgan('dev'))
 
