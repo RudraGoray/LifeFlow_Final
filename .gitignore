@@ -4,3 +4,7 @@
 data/*.db
 data/*.db-shm
 data/*.db-wal
+
+lifeflow-backend/data/*.db
+lifeflow-backend/data/*.db-shm
+lifeflow-backend/data/*.db-wal
