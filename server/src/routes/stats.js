@@ -84,29 +84,142 @@ router.get('/monthly', authenticate, async (req, res) => {
 });
 
 // GET /api/stats/forecast
-// PROTECTED — dashboard & analytics views only.
+// PROTECTED — served from the forecasts table (monthly cron pipeline),
+// actuals from blood_data. Same { accuracy, data: [{month, actual, predicted}] } shape.
 router.get('/forecast', authenticate, async (req, res) => {
   try {
-    const snapshots = await prisma.statsSnapshot.groupBy({
-      by: ['month'],
-      where: buildFilters(req.query),
-      _sum: {
-        demanded: true,
-        forecast: true,
-      },
-      orderBy: { month: 'asc' }
-    });
-    
+    const months = Math.min(Math.max(parseInt(req.query.months, 10) || 12, 1), 24);
+    const bloodTypeParam = req.query.bloodType && req.query.bloodType !== 'ALL'
+      ? String(req.query.bloodType).toUpperCase() : null;
+    if (bloodTypeParam) {
+      const err = checkEnum(bloodTypeParam, BLOOD_TYPES, 'bloodType');
+      if (err) return res.status(400).json({ error: err });
+    }
+    const stateParam = req.query.state && req.query.state !== 'ALL' ? String(req.query.state) : null;
+
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - (months - 1), 1);
+    cutoff.setHours(0, 0, 0, 0);
+
+    const actualWhere = { date: { gte: cutoff } };
+    const forecastWhere = { date: { gte: cutoff } };
+    if (bloodTypeParam) {
+      // forecasts table stores display-form types (e.g. 'O+')
+      const display = bloodTypeParam.replace('_POS', '+').replace('_NEG', '-');
+      actualWhere.bloodType = { in: [bloodTypeParam, display] };
+      forecastWhere.bloodType = display;
+    }
+    if (stateParam) {
+      actualWhere.state = stateParam;
+      forecastWhere.state = stateParam;
+    }
+
+    const [actuals, preds, active] = await Promise.all([
+      prisma.bloodData.groupBy({
+        by: ['date'],
+        where: actualWhere,
+        _sum: { unitsUsed: true },
+        orderBy: { date: 'asc' },
+      }),
+      prisma.forecast.groupBy({
+        by: ['date'],
+        where: forecastWhere,
+        _sum: { predictedUnitsUsed: true },
+        orderBy: { date: 'asc' },
+      }),
+      prisma.modelVersion.findFirst({ where: { isActive: true }, orderBy: { trainedAt: 'desc' } }),
+    ]);
+
+    const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()}`;
+    const buckets = [];
+    const cursor = new Date(cutoff);
+    for (let i = 0; i < months; i++) {
+      buckets.push({
+        key: keyOf(cursor),
+        month: cursor.toLocaleString('default', { month: 'short' }),
+        actual: 0,
+        predicted: 0,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    for (const a of actuals) {
+      const b = buckets.find((x) => x.key === keyOf(new Date(a.date)));
+      if (b) b.actual = a._sum.unitsUsed || 0;
+    }
+    for (const p of preds) {
+      const b = buckets.find((x) => x.key === keyOf(new Date(p.date)));
+      if (b) b.predicted = Math.round((p._sum.predictedUnitsUsed || 0) * 10) / 10;
+    }
+
     res.json({
-      accuracy: 96.8,
-      data: snapshots.map(s => ({
-        month: s.month.toLocaleString('default', { month: 'short' }),
-        actual: s._sum.demanded || 0,
-        predicted: s._sum.forecast || 0
-      }))
+      accuracy: active && active.mape != null ? Math.round((1 - active.mape) * 1000) / 10 : null,
+      modelVersion: active ? { id: active.id, trainedAt: active.trainedAt, mape: active.mape } : null,
+      data: buckets.map(({ key, ...rest }) => rest),
     });
   } catch (error) {
     handlePrismaError(res, error, 'Failed to fetch forecast stats');
+  }
+});
+
+// GET /api/stats/forecast/future
+// PROTECTED — forward-looking outlook only: predicted demand (used) and
+// predicted donations per month for the next N months. No actuals.
+router.get('/forecast/future', authenticate, async (req, res) => {
+  try {
+    const months = Math.min(Math.max(parseInt(req.query.months, 10) || 12, 1), 24);
+    const bloodTypeParam = req.query.bloodType && req.query.bloodType !== 'ALL'
+      ? String(req.query.bloodType).toUpperCase() : null;
+    if (bloodTypeParam) {
+      const err = checkEnum(bloodTypeParam, BLOOD_TYPES, 'bloodType');
+      if (err) return res.status(400).json({ error: err });
+    }
+    const stateParam = req.query.state && req.query.state !== 'ALL' ? String(req.query.state) : null;
+
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    const where = { date: { gte: start } };
+    if (bloodTypeParam) where.bloodType = bloodTypeParam.replace('_POS', '+').replace('_NEG', '-');
+    if (stateParam) where.state = stateParam;
+
+    const [rows, active] = await Promise.all([
+      prisma.forecast.groupBy({
+        by: ['date'],
+        where,
+        _sum: { predictedUnitsUsed: true, predictedUnitsDonated: true },
+        orderBy: { date: 'asc' },
+      }),
+      prisma.modelVersion.findFirst({ where: { isActive: true }, orderBy: { trainedAt: 'desc' } }),
+    ]);
+
+    const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()}`;
+    const buckets = [];
+    const cursor = new Date(start);
+    for (let i = 0; i < months; i++) {
+      buckets.push({
+        key: keyOf(cursor),
+        month: cursor.toLocaleString('default', { month: 'short' }),
+        year: cursor.getFullYear(),
+        predictedDemand: 0,
+        predictedDonated: 0,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    for (const r of rows) {
+      const b = buckets.find((x) => x.key === keyOf(new Date(r.date)));
+      if (b) {
+        b.predictedDemand = Math.round((r._sum.predictedUnitsUsed || 0) * 10) / 10;
+        b.predictedDonated = Math.round((r._sum.predictedUnitsDonated || 0) * 10) / 10;
+      }
+    }
+
+    res.json({
+      modelVersion: active ? { id: active.id, trainedAt: active.trainedAt, mape: active.mape } : null,
+      data: buckets.map(({ key, ...rest }) => rest),
+    });
+  } catch (error) {
+    handlePrismaError(res, error, 'Failed to fetch future outlook');
   }
 });
 
@@ -153,8 +266,10 @@ router.get('/regional', authenticate, async (req, res) => {
   try {
     const { state, city } = req.query;
     const where = buildFilters(req.query);
-    if (state) where.state = state;
-    if (city) where.cityDistrict = city;
+    // buildFilters already ignores 'ALL'; these explicit overrides must too,
+    // otherwise Pan-India would filter state='ALL' literally and return nothing.
+    if (state && state !== 'ALL') where.state = state;
+    if (city && city !== 'ALL') where.cityDistrict = city;
 
     const snapshots = await prisma.statsSnapshot.groupBy({
       by: ['state', 'cityDistrict'],

@@ -12,7 +12,10 @@ const formatBloodType = (type) => (type || '').replace('_POS', '+').replace('_NE
 
 const PAGE_LIMIT = 20;
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function DemandTicketList() {
+  usePageTitle('Demand Tickets');
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

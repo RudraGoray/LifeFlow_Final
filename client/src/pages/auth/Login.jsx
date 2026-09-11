@@ -12,7 +12,10 @@ const REDIRECT_NOTICES = {
   role: 'That page requires a different account type. Sign in with an authorized account.',
 };
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function Login() {
+  usePageTitle('Login');
   const [role, setRole] = useState('HOSPITAL');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

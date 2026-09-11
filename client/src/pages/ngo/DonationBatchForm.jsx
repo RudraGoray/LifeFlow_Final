@@ -6,7 +6,10 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function DonationBatchForm() {
+  usePageTitle('Submit Donation Batch');
   const [formData, setFormData] = useState({
     campName: '',
     location: '',

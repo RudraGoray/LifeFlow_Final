@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import StockManager from '../../components/dashboard/StockManager';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function BloodBankInventory() {
+  usePageTitle('Blood Bank Inventory');
   const [bankName, setBankName] = useState('');
 
   useEffect(() => {

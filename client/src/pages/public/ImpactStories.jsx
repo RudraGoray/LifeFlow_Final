@@ -1,7 +1,10 @@
 import React from 'react';
 import Card from '../../components/ui/Card';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function ImpactStories() {
+  usePageTitle('Impact Stories');
   const stories = [
     {
       quote: "The predictive alerts on LifeFlow warned us about an impending shortage of AB- blood during the monsoon fever spike. We ran targeted drives three weeks in advance. Not a single patient had to wait.",

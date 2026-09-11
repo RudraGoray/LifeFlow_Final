@@ -1,7 +1,10 @@
 import React from 'react';
 import StockManager from '../../components/dashboard/StockManager';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function HospitalInventory() {
+  usePageTitle('Hospital Inventory');
   return (
     <StockManager
       owner="hospital"

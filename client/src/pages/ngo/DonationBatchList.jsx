@@ -12,7 +12,10 @@ const formatBloodType = (type) => (type || '').replace('_POS', '+').replace('_NE
 
 const PAGE_LIMIT = 20;
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function DonationBatchList() {
+  usePageTitle('Donation Batches');
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

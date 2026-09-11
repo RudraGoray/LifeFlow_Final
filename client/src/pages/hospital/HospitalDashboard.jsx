@@ -14,7 +14,10 @@ import { Link } from 'react-router-dom';
 
 const formatType = (type) => (type || '').replace('_POS', '+').replace('_NEG', '-');
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function HospitalDashboard() {
+  usePageTitle('Hospital Dashboard');
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [trend, setTrend] = useState([]);

@@ -601,7 +601,10 @@ function ImpactStrip() {
 
 // ─── Main home page (PublicLayout supplies navbar + footer) ──────────────────
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function Home() {
+  usePageTitle('Home');
   const [stats, setStats] = useState({ totalUnitsDonated: 0, livesSaved: 0, activeDonors: 0 });
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);

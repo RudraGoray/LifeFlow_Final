@@ -4,7 +4,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Heart, Globe, Shield } from 'lucide-react';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function NGONetwork() {
+  usePageTitle('NGO Network');
   const [ngos, setNgos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

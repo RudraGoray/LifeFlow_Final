@@ -1,7 +1,10 @@
 import React from 'react';
 import GainedVsUsed from '../../components/dashboard/GainedVsUsed';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function HospitalAnalytics() {
+  usePageTitle('Hospital Analytics');
   return (
     <GainedVsUsed
       gainedLabel="Blood Received"

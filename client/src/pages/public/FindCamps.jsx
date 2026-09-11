@@ -6,7 +6,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function FindCamps() {
+  usePageTitle('Find Camps');
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

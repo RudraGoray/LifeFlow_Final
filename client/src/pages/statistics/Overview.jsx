@@ -6,7 +6,10 @@ import StatCard from '../../components/ui/StatCard';
 import { DualBarChart } from '../../components/charts/DualBarChart';
 import { Activity } from 'lucide-react';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function Overview() {
+  usePageTitle('Statistics Overview');
   const { bloodType, region, timeRange } = useOutletContext();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

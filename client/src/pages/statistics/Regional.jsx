@@ -17,7 +17,10 @@ function healthBadge(health) {
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function Regional() {
+  usePageTitle('Regional Breakdown');
   const { bloodType, region, timeRange } = useOutletContext();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

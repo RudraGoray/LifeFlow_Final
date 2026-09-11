@@ -18,7 +18,10 @@ const initialForm = {
   donors: '',
 };
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function CampRegistration() {
+  usePageTitle('Register a Blood Drive');
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);

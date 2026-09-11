@@ -8,7 +8,10 @@ import { MapPin, Phone } from 'lucide-react';
 
 const PAGE_LIMIT = 12;
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function BloodAvailability() {
+  usePageTitle('Blood Availability');
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

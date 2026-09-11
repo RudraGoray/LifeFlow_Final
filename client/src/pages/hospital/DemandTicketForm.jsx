@@ -14,7 +14,10 @@ function defaultRequiredBy() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function DemandTicketForm() {
+  usePageTitle('Raise Demand Ticket');
   const [formData, setFormData] = useState(() => ({
     bloodType: 'O_POS',
     units: 1,

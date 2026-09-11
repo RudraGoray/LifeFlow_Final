@@ -13,7 +13,10 @@ import { Shield, Clock, AlertTriangle, TrendingUp, Package, BarChart3 } from 'lu
 
 const formatType = (type) => (type || '').replace('_POS', '+').replace('_NEG', '-');
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function BloodBankDashboard() {
+  usePageTitle('Bloodbank Dashboard');
   const { user } = useAuth();
   const lastGood = useRef({ dashboard: null, queue: [] });
 

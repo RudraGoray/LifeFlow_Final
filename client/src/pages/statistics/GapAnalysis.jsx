@@ -3,7 +3,10 @@ import { useOutletContext } from 'react-router-dom';
 import api from '../../utils/api';
 import Card from '../../components/ui/Card';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function GapAnalysis() {
+  usePageTitle('Gap Analysis');
   const { bloodType, region, timeRange } = useOutletContext();
   const [gaps, setGaps] = useState([]);
   const [loading, setLoading] = useState(true);

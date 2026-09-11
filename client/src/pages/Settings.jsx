@@ -16,7 +16,10 @@ const ROLE_BADGE = {
   ADMIN: 'default',
 };
 
+import usePageTitle from '../hooks/usePageTitle';
+
 export default function Settings() {
+  usePageTitle('Settings');
   const { user, logout } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();

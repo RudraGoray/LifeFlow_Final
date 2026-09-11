@@ -22,7 +22,10 @@ const EMPTY_FORM = {
   cityDistrict: ''
 };
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function DonorRegistration() {
+  usePageTitle('Register Donor');
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

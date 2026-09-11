@@ -8,7 +8,10 @@ import PageHeader from '../../components/dashboard/PageHeader';
 import { DualBarChart } from '../../components/charts/DualBarChart';
 import { LineAreaChart } from '../../components/charts/LineAreaChart';
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function NGOAnalytics() {
+  usePageTitle('Impact Analytics');
   const [months, setMonths] = useState(6);
   const { data, loading, lastUpdated } = usePolling(
     () => api.get(`/dashboard/ngo/impact?months=${months}`).then((r) => r.data),

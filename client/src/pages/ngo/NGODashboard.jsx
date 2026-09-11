@@ -12,7 +12,10 @@ import { PlusCircle, MapPin, Droplet, Clock, CheckCircle, UserPlus, BarChart3, C
 
 const formatType = (type) => (type || '').replace('_POS', '+').replace('_NEG', '-');
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function NGODashboard() {
+  usePageTitle('NGO Dashboard');
   const { user } = useAuth();
   const [camps, setCamps] = useState([]);
 

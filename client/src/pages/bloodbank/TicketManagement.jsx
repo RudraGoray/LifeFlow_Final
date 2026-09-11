@@ -33,7 +33,10 @@ function normalizeQueue(data) {
   return [...demands, ...donations].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function TicketManagement() {
+  usePageTitle('Ticket Management');
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('demand'); // demand | donation

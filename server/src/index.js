@@ -14,6 +14,8 @@ const campRoutes = require('./routes/camps');
 const bloodbankRoutes = require('./routes/bloodbanks');
 const inventoryRoutes = require('./routes/inventory');
 const organizationsRoutes = require('./routes/organizations');
+const bloodDataRoutes = require('./routes/bloodData');
+const { scheduleForecastJobs } = require('./jobs/forecastRetrain');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,9 +48,17 @@ const registrationLimiter = rateLimit({
   legacyHeaders: false,
   handler: tooMany('Too many requests. Please try again later.'),
 });
+const ingestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: tooMany('Ingest rate limit exceeded. Please try again later.'),
+});
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register-donor', registrationLimiter);
 app.use('/api/auth/request-account', registrationLimiter);
+app.use('/api/blood-data/ingest', ingestLimiter);
 
 // ─── Request Logger ─────────────────────────────────
 app.use((req, res, next) => {
@@ -66,6 +76,7 @@ app.use('/api/camps', campRoutes);
 app.use('/api/bloodbanks', bloodbankRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/organizations', organizationsRoutes);
+app.use('/api/blood-data', bloodDataRoutes);
 
 // ─── Health Check ───────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -90,6 +101,7 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🩸 LifeFlow API Server running on http://localhost:${PORT}`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+  scheduleForecastJobs();
 });
 
 module.exports = app;

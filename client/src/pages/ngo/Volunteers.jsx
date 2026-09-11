@@ -15,7 +15,10 @@ const TYPE_FILTERS = ['ALL', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const TYPE_TO_ENUM = { 'A+': 'A_POS', 'A-': 'A_NEG', 'B+': 'B_POS', 'B-': 'B_NEG', 'AB+': 'AB_POS', 'AB-': 'AB_NEG', 'O+': 'O_POS', 'O-': 'O_NEG' };
 const PAGE_LIMIT = 10;
 
+import usePageTitle from '../../hooks/usePageTitle';
+
 export default function Volunteers() {
+  usePageTitle('Volunteers');
   const [donors, setDonors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
