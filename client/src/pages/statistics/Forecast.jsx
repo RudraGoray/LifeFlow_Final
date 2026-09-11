@@ -10,17 +10,19 @@ export default function Forecast() {
   const { bloodType, region, timeRange } = useOutletContext();
   const [forecast, setForecast] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchForecast = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await api.get('/stats/forecast', {
           params: { bloodType, state: region, months: timeRange.replace('M', '') }
         });
         setForecast(response.data);
       } catch (err) {
-        console.error('Failed to fetch forecast', err);
+        setError(err.response?.data?.error || 'Failed to fetch forecast');
       } finally {
         setLoading(false);
       }
@@ -28,7 +30,15 @@ export default function Forecast() {
     fetchForecast();
   }, [bloodType, region, timeRange]);
 
-  if (loading) return <div className="animate-pulse h-64 bg-gray-200 rounded-xl"></div>;
+  if (loading) return <div className="animate-pulse h-64 bg-gray-200 dark:bg-white/10 rounded-xl"></div>;
+
+  if (error || !forecast) {
+    return (
+      <Card>
+        <p className="text-sm text-red-800 dark:text-red-300 text-center py-6">{error || 'Forecast unavailable.'}</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Filter } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, MapPin, Calendar } from 'lucide-react';
 import api from '../../utils/api';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -8,19 +9,19 @@ import Button from '../../components/ui/Button';
 export default function FindCamps() {
   const [camps, setCamps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Filters state
   const [search, setSearch] = useState('');
-  const [bloodType, setBloodType] = useState('');
   const [stateFilter, setStateFilter] = useState('');
 
   useEffect(() => {
     const fetchCamps = async () => {
       try {
         const response = await api.get('/camps/upcoming');
-        setCamps(response.data);
+        setCamps(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
-        console.error('Failed to fetch camps', err);
+        setError(err.response?.data?.error || 'Failed to fetch camps');
       } finally {
         setLoading(false);
       }
@@ -48,20 +49,20 @@ export default function FindCamps() {
 
         {/* Filters */}
         <Card className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative col-span-1 md:col-span-2">
               <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search by camp name or venue..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-border-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-crimson"
               />
             </div>
-            
-            <select 
-              value={stateFilter} 
+
+            <select
+              value={stateFilter}
               onChange={(e) => setStateFilter(e.target.value)}
               className="px-4 py-2 bg-gray-50 border border-border-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-crimson text-charcoal"
             >
@@ -72,28 +73,21 @@ export default function FindCamps() {
               <option value="Tamil Nadu">Tamil Nadu</option>
               <option value="West Bengal">West Bengal</option>
             </select>
-
-            <select 
-              value={bloodType} 
-              onChange={(e) => setBloodType(e.target.value)}
-              className="px-4 py-2 bg-gray-50 border border-border-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-crimson text-charcoal"
-            >
-              <option value="">Any Blood Type Needed</option>
-              <option value="O-">O Negative (Universal)</option>
-              <option value="A-">A Negative</option>
-              <option value="B-">B Negative</option>
-            </select>
           </div>
         </Card>
+
+        {error && (
+          <div className="mb-8 p-3 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 text-sm rounded-lg text-center">{error}</div>
+        )}
 
         {/* Results */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {[...Array(6)].map((_, i) => <Card key={i} className="animate-pulse h-64 bg-gray-100" />)}
+            {[...Array(6)].map((_, i) => <Card key={i} className="animate-pulse h-64 bg-gray-100" />)}
           </div>
         ) : filteredCamps.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-xl border border-border-gray">
-            <Filter className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-charcoal">No camps found</h3>
             <p className="text-muted-gray mt-1">Try adjusting your filters or search terms.</p>
           </div>
@@ -124,7 +118,9 @@ export default function FindCamps() {
                 
                 <div className="pt-4 border-t border-border-gray flex justify-between items-center">
                   <span className="text-xs text-muted-gray">Org: {camp.organizer}</span>
-                  <Button variant="secondary" size="sm">Register</Button>
+                  <Link to="/camp-registration">
+                    <Button variant="secondary" size="sm">Register</Button>
+                  </Link>
                 </div>
               </Card>
             ))}

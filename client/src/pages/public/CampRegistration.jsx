@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../../utils/api';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -21,6 +22,8 @@ export default function CampRegistration() {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -45,17 +48,35 @@ export default function CampRegistration() {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    // Normally this would POST to /api/auth/request-account or similar for an NGO
-    // Since actual camp creation requires an authenticated NGO role, this public page
-    // serves as an interest/lead form.
-    setSuccess(true);
-    setForm(initialForm);
-    setTimeout(() => setSuccess(false), 5000);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // Persisted as an AccountRequest lead for coordinator follow-up.
+      await api.post('/auth/request-account', {
+        organizationName: form.orgName.trim(),
+        orgType: form.orgType.trim(),
+        contact: form.contact.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        venue: form.venue.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        date: form.date || undefined,
+        donors: form.donors || undefined,
+      });
+      setSuccess(true);
+      setForm(initialForm);
+      setTimeout(() => setSuccess(false), 5000);
+    } catch (err) {
+      setSubmitError(err.response?.data?.error || 'Failed to submit request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -74,6 +95,9 @@ export default function CampRegistration() {
             <Alert role="hospital" className="mb-6 bg-green-50 text-green-800 border-green-200">
               Thank you! Your request has been submitted. Our coordination team will contact you within 24 hours.
             </Alert>
+          )}
+          {submitError && (
+            <div className="mb-6 p-3 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 text-sm rounded-lg">{submitError}</div>
           )}
           
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -100,8 +124,8 @@ export default function CampRegistration() {
             </div>
 
             <div className="pt-4">
-              <Button type="submit" variant="primary" size="lg" className="w-full">
-                Submit Registration Request
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={submitting}>
+                {submitting ? 'Submitting...' : 'Submit Registration Request'}
               </Button>
             </div>
             

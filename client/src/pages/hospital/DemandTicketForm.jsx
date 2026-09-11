@@ -6,17 +6,25 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 
+// Default required-by date from the clock (tomorrow, same time), mirroring
+// DonationBatchForm's auto-filled collection date. Still editable below.
+function defaultRequiredBy() {
+  const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function DemandTicketForm() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     bloodType: 'O_POS',
     units: 1,
     urgency: 'MEDIUM',
     department: '',
-    requiredBy: '',
+    requiredBy: defaultRequiredBy(),
     patientRefId: '',
     diagnosis: '',
     notes: ''
-  });
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -66,7 +74,7 @@ export default function DemandTicketForm() {
       </div>
 
       <Card>
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-lg">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 text-sm rounded-lg">{error}</div>}
         
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-b border-border-gray pb-6">
@@ -148,14 +156,14 @@ export default function DemandTicketForm() {
             <label htmlFor="notes" className="text-xs font-semibold text-muted-gray uppercase tracking-wider mb-1.5 block">
               Additional Notes
             </label>
-            <textarea
-              id="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows="3"
-              className="w-full px-3 py-2 bg-white border border-border-gray rounded-lg text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary-crimson"
-              placeholder="Any specific instructions for the blood bank..."
-            ></textarea>
+              <textarea
+                id="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows="3"
+                className="w-full px-3 py-2 bg-white dark:bg-white/5 border border-border-gray dark:border-white/10 rounded-lg text-sm text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-crimson"
+                placeholder="Any specific instructions for the blood bank..."
+              ></textarea>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border-gray">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import Card from '../../components/ui/Card';
@@ -14,14 +14,28 @@ export default function DonationBatchForm() {
     bloodType: 'O_POS',
     units: 1,
     donorCount: 1,
-    receivingBankId: 'BANK001', // Defaulting to first mock bank
+    receivingBankId: '',
     lotRef: '',
     notes: ''
   });
+  const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get('/bloodbanks', { params: { page: 1, limit: 50 } })
+      .then((res) => {
+        // Server returns a paginated envelope: { banks, total, page, limit }
+        const list = Array.isArray(res.data?.banks) ? res.data.banks : [];
+        setBanks(list);
+        if (list.length > 0) {
+          setFormData((prev) => ({ ...prev, receivingBankId: prev.receivingBankId || list[0].bloodBankId }));
+        }
+      })
+      .catch((err) => console.error('Failed to fetch blood banks', err));
+  }, []);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -42,6 +56,7 @@ export default function DonationBatchForm() {
       const today = new Date(); today.setHours(23, 59, 59, 999);
       if (new Date(formData.date) > today) errs.date = 'Collection date cannot be in the future.';
     }
+    if (!formData.receivingBankId) errs.receivingBankId = 'Select the receiving blood bank.';
     return errs;
   };
 
@@ -74,7 +89,7 @@ export default function DonationBatchForm() {
       </div>
 
       <Card>
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-lg">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-300 text-sm rounded-lg">{error}</div>}
         
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-border-gray pb-6">
@@ -110,11 +125,12 @@ export default function DonationBatchForm() {
               id="receivingBankId" 
               value={formData.receivingBankId} 
               onChange={handleChange} 
-              options={[
-                { value: 'BANK001', label: 'Lions Blood Bank (Delhi)' },
-                { value: 'BANK002', label: 'Rotary Blood Bank (Mumbai)' },
-                { value: 'BANK003', label: 'Sankalp Blood Bank (Bangalore)' }
-              ]}
+              options={
+                banks.length > 0
+                  ? banks.map((b) => ({ value: b.bloodBankId, label: `${b.name} (${b.cityDistrict})` }))
+                  : [{ value: '', label: 'Loading banks…' }]
+              }
+              error={fieldErrors.receivingBankId}
               required
             />
           </div>
@@ -172,7 +188,7 @@ export default function DonationBatchForm() {
                 value={formData.notes}
                 onChange={handleChange}
                 rows="2"
-                className="w-full px-3 py-2 bg-white border border-border-gray rounded-lg text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary-crimson"
+                className="w-full px-3 py-2 bg-white dark:bg-white/5 border border-border-gray dark:border-white/10 rounded-lg text-sm text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-crimson"
               ></textarea>
             </div>
           </div>

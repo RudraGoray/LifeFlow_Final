@@ -1,5 +1,7 @@
 const express = require('express');
 const prisma = require('../config/db');
+const authenticate = require('../middleware/authenticate');
+const { BLOOD_TYPES, checkEnum, handlePrismaError } = require('../utils/validation');
 const router = express.Router();
 
 function formatBloodType(type) {
@@ -13,7 +15,9 @@ function buildFilters(query) {
   const where = {};
 
   if (query.bloodType && query.bloodType !== 'ALL') {
-    where.bloodType = query.bloodType;
+    const err = checkEnum(query.bloodType, BLOOD_TYPES, 'bloodType');
+    if (err) throw Object.assign(new Error(err), { status: 400 });
+    where.bloodType = query.bloodType.toUpperCase();
   }
 
   if (query.state && query.state !== 'ALL') {
@@ -35,6 +39,7 @@ function buildFilters(query) {
 }
 
 // GET /api/stats/summary
+// PUBLIC — consumed by the unauthenticated homepage stat strip.
 router.get('/summary', async (req, res) => {
   try {
     const [donors, units] = await Promise.all([
@@ -53,7 +58,8 @@ router.get('/summary', async (req, res) => {
 });
 
 // GET /api/stats/monthly
-router.get('/monthly', async (req, res) => {
+// PROTECTED — dashboard & analytics views only.
+router.get('/monthly', authenticate, async (req, res) => {
   try {
     const snapshots = await prisma.statsSnapshot.groupBy({
       by: ['month'],
@@ -73,13 +79,13 @@ router.get('/monthly', async (req, res) => {
 
     res.json(formatted);
   } catch (error) {
-    console.error('Stats monthly error:', error);
-    res.status(500).json({ error: 'Failed to fetch monthly stats' });
+    handlePrismaError(res, error, 'Failed to fetch monthly stats');
   }
 });
 
 // GET /api/stats/forecast
-router.get('/forecast', async (req, res) => {
+// PROTECTED — dashboard & analytics views only.
+router.get('/forecast', authenticate, async (req, res) => {
   try {
     const snapshots = await prisma.statsSnapshot.groupBy({
       by: ['month'],
@@ -100,13 +106,13 @@ router.get('/forecast', async (req, res) => {
       }))
     });
   } catch (error) {
-    console.error('Stats forecast error:', error);
-    res.status(500).json({ error: 'Failed to fetch forecast stats' });
+    handlePrismaError(res, error, 'Failed to fetch forecast stats');
   }
 });
 
 // GET /api/stats/gap
-router.get('/gap', async (req, res) => {
+// PROTECTED — dashboard & analytics views only.
+router.get('/gap', authenticate, async (req, res) => {
   try {
     const snapshots = await prisma.statsSnapshot.groupBy({
       by: ['bloodType'],
@@ -137,13 +143,13 @@ router.get('/gap', async (req, res) => {
 
     res.json(gap);
   } catch (error) {
-    console.error('Stats gap error:', error);
-    res.status(500).json({ error: 'Failed to fetch gap analysis' });
+    handlePrismaError(res, error, 'Failed to fetch gap analysis');
   }
 });
 
 // GET /api/stats/regional
-router.get('/regional', async (req, res) => {
+// PROTECTED — dashboard & analytics views only.
+router.get('/regional', authenticate, async (req, res) => {
   try {
     const { state, city } = req.query;
     const where = buildFilters(req.query);
@@ -177,8 +183,7 @@ router.get('/regional', async (req, res) => {
 
     res.json(regional);
   } catch (error) {
-    console.error('Stats regional error:', error);
-    res.status(500).json({ error: 'Failed to fetch regional stats' });
+    handlePrismaError(res, error, 'Failed to fetch regional stats');
   }
 });
 

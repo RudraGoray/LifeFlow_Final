@@ -112,6 +112,8 @@ async function main() {
     prisma.organization.create({
       data: {
         name: 'Red Cross Society India',
+        tier: 'Platinum Partner',
+        focus: 'Disaster Relief & Regular Supply',
         type: 'NGO',
         address: '1, Red Cross Road, Golf Links',
         state: 'Delhi',
@@ -124,6 +126,8 @@ async function main() {
     prisma.organization.create({
       data: {
         name: 'BloodConnect Foundation',
+        tier: 'Gold Partner',
+        focus: 'Youth & University Drives',
         type: 'NGO',
         address: '34, Koramangala Industrial Layout',
         state: 'Karnataka',
@@ -136,6 +140,8 @@ async function main() {
     prisma.organization.create({
       data: {
         name: 'Sankalp India Foundation',
+        tier: 'Gold Partner',
+        focus: 'Thalassemia Support',
         type: 'NGO',
         address: '67, Salt Lake Sector V',
         state: 'West Bengal',
@@ -228,6 +234,7 @@ async function main() {
         passwordHash,
         role: 'BLOODBANK',
         orgId: null,
+        bloodBankId: 'BB-0001',
         state: 'Maharashtra',
         cityDistrict: 'Mumbai',
       },
@@ -239,6 +246,7 @@ async function main() {
         passwordHash,
         role: 'BLOODBANK',
         orgId: null,
+        bloodBankId: 'BB-0002',
         state: 'Delhi',
         cityDistrict: 'New Delhi',
       },

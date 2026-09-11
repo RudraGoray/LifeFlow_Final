@@ -62,12 +62,14 @@ model User {
   passwordHash  String
   role          Role
   orgId         String?
+  bloodBankId   String?
   state         String
   cityDistrict  String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   organization  Organization? @relation(fields: [orgId], references: [id])
+  bloodBank     BloodBank? @relation(fields: [bloodBankId], references: [bloodBankId])
 }
 
 model Organization {
@@ -81,6 +83,8 @@ model Organization {
   lat           Float?
   lng           Float?
   createdAt     DateTime @default(now())
+  tier          String?
+  focus         String?
 
   users         User[]
 }
@@ -95,6 +99,8 @@ model Donor {
   registeredAt  DateTime  @default(now())
 
   bloodRecords  Blood[]
+
+  @@index([state, cityDistrict])
 }
 
 model BloodBank {
@@ -111,6 +117,9 @@ model BloodBank {
   bloodRecords   Blood[]
   inventory      BloodInventory[]
   donationBatches DonationBatch[]  @relation("ReceivingBank")
+  staff          User[]
+
+  @@index([cityDistrict])
 }
 
 model Blood {
@@ -129,6 +138,8 @@ model Blood {
   donor          Donor?       @relation(fields: [donorId], references: [donorId])
   demandTickets  DemandTicket[]
   donationBatches DonationBatch[]
+
+  @@index([status, bloodBankId])
 }
 
 model DemandTicket {
@@ -148,6 +159,8 @@ model DemandTicket {
   updatedAt      DateTime     @updatedAt
 
   blood          Blood?       @relation(fields: [bloodId], references: [bloodId])
+
+  @@index([hospitalId, status, createdAt])
 }
 
 model DonationBatch {
@@ -169,6 +182,9 @@ model DonationBatch {
 
   blood           Blood?       @relation(fields: [bloodId], references: [bloodId])
   receivingBank   BloodBank    @relation("ReceivingBank", fields: [receivingBankId], references: [bloodBankId])
+
+  @@index([ngoId, status, submittedAt])
+  @@index([receivingBankId, status])
 }
 
 model BloodInventory {
@@ -184,6 +200,55 @@ model BloodInventory {
   @@unique([bloodBankId, bloodType])
 }
 
+// Hospital-side fridge stock (per organisation + blood type).
+model HospitalInventory {
+  id            String     @id @default(uuid())
+  hospitalId    String
+  bloodType     BloodType
+  units         Int        @default(0)
+  statusLevel   StockLevel @default(ADEQUATE)
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([hospitalId, bloodType])
+}
+
+enum MovementOwner {
+  HOSPITAL
+  BLOODBANK
+}
+
+enum MovementDirection {
+  IN
+  OUT
+}
+
+enum MovementReason {
+  DONATION_CONFIRMED
+  DEMAND_RECEIVED
+  MANUAL_RECEIPT
+  DISPATCH_TO_HOSPITAL
+  TRANSFUSION_USED
+  EXPIRED
+  ADJUSTMENT
+}
+
+// Append-only stock ledger powering inventory analytics
+// (gained/stored vs used/demanded) for hospitals and blood banks.
+model StockMovement {
+  id            String            @id @default(uuid())
+  ownerKind     MovementOwner
+  ownerId       String
+  bloodType     BloodType
+  direction     MovementDirection
+  units         Int
+  reason        MovementReason
+  refId         String?
+  note          String?
+  createdAt     DateTime          @default(now())
+
+  @@index([ownerKind, ownerId, createdAt])
+}
+
 model Camp {
   id            String   @id @default(uuid())
   name          String
@@ -196,6 +261,34 @@ model Camp {
   state         String
   cityDistrict  String
   createdAt     DateTime @default(now())
+
+  @@index([date])
+}
+
+enum RequestStatus {
+  PENDING
+  REVIEWED
+  APPROVED
+  DECLINED
+}
+
+// Public camp/account leads submitted via the registration form.
+// Persisted (not fire-and-forget) so coordinators can follow up.
+model AccountRequest {
+  id               String        @id @default(uuid())
+  organizationName String
+  orgType          String?
+  contactPerson    String
+  email            String
+  phone            String
+  venue            String?
+  cityDistrict     String?
+  state            String?
+  preferredDate    DateTime?
+  expectedDonors   Int?
+  status           RequestStatus @default(PENDING)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model StatsSnapshot {

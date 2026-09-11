@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Badge from '../ui/Badge';
+import ThemeToggle from '../ui/ThemeToggle';
 import { Bell, Search, Menu } from 'lucide-react';
 
 export default function TopBar({ onMenuClick }) {
@@ -41,6 +42,8 @@ export default function TopBar({ onMenuClick }) {
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary-crimson ring-2 ring-white"></span>
         </button>
+
+        <ThemeToggle />
         
         <div className="flex items-center gap-2 ml-2">
           <div className="h-8 w-8 rounded-full bg-primary-crimson text-white flex items-center justify-center font-bold text-sm">

@@ -3,27 +3,36 @@ import api from '../../utils/api';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Select from '../../components/ui/Select';
+import Pager from '../../components/ui/Pager';
 import { MapPin, Phone } from 'lucide-react';
+
+const PAGE_LIMIT = 12;
 
 export default function BloodAvailability() {
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [bloodType, setBloodType] = useState('O_POS');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const fetchAvailability = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const response = await api.get(`/bloodbanks?type=${bloodType}`);
-        setBanks(response.data);
+        // Server returns a paginated envelope: { banks, total, page, limit }
+        const response = await api.get('/bloodbanks', { params: { type: bloodType, page, limit: PAGE_LIMIT } });
+        setBanks(Array.isArray(response.data?.banks) ? response.data.banks : []);
+        setTotal(response.data?.total ?? 0);
       } catch (err) {
-        console.error('Failed to fetch blood availability', err);
+        setError(err.response?.data?.error || 'Failed to fetch blood availability');
       } finally {
         setLoading(false);
       }
     };
     fetchAvailability();
-  }, [bloodType]);
+  }, [bloodType, page]);
 
   return (
     <div className="space-y-6">
@@ -33,12 +42,12 @@ export default function BloodAvailability() {
       </div>
 
       <Card className="bg-gray-50">
-        <div className="max-w-xs">
-          <Select 
-            label="Filter by Blood Type" 
-            id="bloodType" 
-            value={bloodType} 
-            onChange={(e) => setBloodType(e.target.value)} 
+          <div className="max-w-xs">
+            <Select
+              label="Filter by Blood Type"
+              id="bloodType"
+              value={bloodType}
+              onChange={(e) => { setBloodType(e.target.value); setPage(1); }}
             options={[
               { value: 'A_POS', label: 'A+' }, { value: 'A_NEG', label: 'A-' },
               { value: 'B_POS', label: 'B+' }, { value: 'B_NEG', label: 'B-' },
@@ -53,6 +62,10 @@ export default function BloodAvailability() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[1,2,3,4].map(i => <Card key={i} className="h-40 animate-pulse bg-gray-100" />)}
         </div>
+      ) : error ? (
+        <Card className="text-center py-12">
+          <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+        </Card>
       ) : banks.length === 0 ? (
         <Card className="text-center py-12">
           <p className="text-muted-gray">No blood banks found with the selected filters.</p>
@@ -62,7 +75,7 @@ export default function BloodAvailability() {
           {banks.map(bank => (
             <Card key={bank.bloodBankId} className="flex flex-col">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-bold text-charcoal">{bank.name}</h3>
+                <h3 className="text-lg font-bold text-charcoal dark:text-white">{bank.name}</h3>
                 <Badge variant={
                   bank.inventory.some(i => i.statusLevel === 'CRITICAL') ? 'danger' :
                   bank.inventory.some(i => i.statusLevel === 'LOW') ? 'warning' : 'success'
@@ -97,6 +110,9 @@ export default function BloodAvailability() {
             </Card>
           ))}
         </div>
+      )}
+      {!loading && !error && (
+        <Pager page={page} limit={PAGE_LIMIT} total={total} onPage={setPage} />
       )}
     </div>
   );

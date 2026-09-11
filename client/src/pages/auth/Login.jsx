@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Droplet, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link, useLocation, Navigate } from 'react-router-dom';
+import { Droplet, Eye, EyeOff, Home, Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { dashboardPathForRole } from '../../routes/rolePaths';
+
+const REDIRECT_NOTICES = {
+  auth: 'Your session has expired or you need to sign in to view that page.',
+  role: 'That page requires a different account type. Sign in with an authorized account.',
+};
 
 export default function Login() {
   const [role, setRole] = useState('HOSPITAL');
@@ -15,8 +21,16 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   
-  const { login } = useAuth();
+  const { login, user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectNotice = REDIRECT_NOTICES[location.state?.reason] || null;
+
+  // Already signed in → go to the role dashboard (no reason to show the form).
+  // Wait for session restore first so we never flash-redirect on reload.
+  if (!authLoading && isAuthenticated) {
+    return <Navigate to={dashboardPathForRole(user?.role) || '/dashboard'} replace />;
+  }
 
   const validate = () => {
     const errs = {};
@@ -37,7 +51,7 @@ export default function Login() {
     try {
       const response = await api.post('/auth/login', { email, password, role });
       login(response.data.user, response.data.token);
-      navigate('/dashboard');
+      navigate(dashboardPathForRole(response.data.user?.role) || '/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to login. Please try again.');
     } finally {
@@ -53,7 +67,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-off-white">
+    <div className="min-h-screen flex bg-off-white relative">
+      <Link
+        to="/"
+        aria-label="Back to home"
+        className="absolute top-4 left-4 z-20 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-border-gray shadow-sm text-sm font-medium text-muted-gray hover:text-charcoal hover:bg-gray-50 transition-colors"
+      >
+        <Home className="h-4 w-4" />
+        Home
+      </Link>
       {/* Left Panel */}
       <div className="hidden lg:flex lg:w-2/5 bg-charcoal text-white flex-col justify-between p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #B91C3C 0%, transparent 50%)' }}></div>
@@ -81,6 +103,13 @@ export default function Login() {
             <h2 className="text-2xl font-bold text-charcoal mb-2">Welcome back</h2>
             <p className="text-sm text-muted-gray">Select your role to access the correct operational workspace</p>
           </div>
+
+          {redirectNotice && !error && (
+            <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300 text-sm font-medium rounded-lg border border-blue-100 dark:border-blue-500/20 flex items-start gap-2">
+              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>{redirectNotice}</span>
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-3 bg-red-50 text-danger-red text-sm font-medium rounded-lg border border-red-100">

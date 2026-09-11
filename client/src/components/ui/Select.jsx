@@ -14,8 +14,8 @@ export default function Select({ label, id, value, onChange, options, required, 
         onChange={onChange}
         required={required}
         aria-invalid={!!error}
-        className={`px-3 py-2 bg-white border rounded-lg text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-primary-crimson focus:border-transparent transition-shadow ${
-          error ? 'border-danger-red' : 'border-border-gray'
+        className={`px-3 py-2 bg-white dark:bg-white/5 border rounded-lg text-sm text-charcoal dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-crimson focus:border-transparent transition-shadow ${
+          error ? 'border-danger-red' : 'border-border-gray dark:border-white/10'
         }`}
       >
         {options.map((opt, i) => (

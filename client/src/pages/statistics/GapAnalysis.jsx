@@ -7,17 +7,19 @@ export default function GapAnalysis() {
   const { bloodType, region, timeRange } = useOutletContext();
   const [gaps, setGaps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchGaps = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await api.get('/stats/gap', {
           params: { bloodType, state: region, months: timeRange.replace('M', '') }
         });
-        setGaps(response.data);
+        setGaps(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
-        console.error('Failed to fetch gap analysis', err);
+        setError(err.response?.data?.error || 'Failed to fetch gap analysis');
       } finally {
         setLoading(false);
       }
@@ -25,7 +27,15 @@ export default function GapAnalysis() {
     fetchGaps();
   }, [bloodType, region, timeRange]);
 
-  if (loading) return <div className="animate-pulse h-64 bg-gray-200 rounded-xl"></div>;
+  if (loading) return <div className="animate-pulse h-64 bg-gray-200 dark:bg-white/10 rounded-xl"></div>;
+
+  if (error) {
+    return (
+      <Card>
+        <p className="text-sm text-red-800 dark:text-red-300 text-center py-6">{error}</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

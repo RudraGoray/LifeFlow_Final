@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Droplet, LayoutDashboard, BarChart3, Ticket, Users, Settings, LogOut, Activity } from 'lucide-react';
+import { Droplet, LayoutDashboard, BarChart3, Ticket, Users, UserPlus, Package, Settings, LogOut, Activity } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -17,42 +17,48 @@ export default function Sidebar() {
   const role = user.role.toLowerCase();
   
   const getNavItems = () => {
-    const commonItems = [
+    const settingsItem = { name: 'Settings', path: '/settings', icon: Settings };
+    const fallbackItems = [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { name: 'Settings', path: '/settings', icon: Settings },
+      settingsItem,
     ];
 
     if (role === 'hospital') {
       return [
-        commonItems[0],
+        { name: 'Dashboard', path: '/dashboard/hospital', icon: LayoutDashboard },
         { name: 'Demand Tickets', path: '/hospital/demand-tickets', icon: Ticket },
         { name: 'Blood Availability', path: '/hospital/blood-availability', icon: Droplet },
-        { name: 'Analytics', path: '/statistics/overview', icon: BarChart3 },
-        commonItems[1]
+        { name: 'Inventory', path: '/hospital/inventory', icon: Package },
+        { name: 'Blood Analytics', path: '/hospital/analytics', icon: BarChart3 },
+        { name: 'Statistics', path: '/statistics/overview', icon: Activity },
+        settingsItem
       ];
     }
-    
+
     if (role === 'ngo') {
       return [
-        commonItems[0],
+        { name: 'Dashboard', path: '/dashboard/ngo', icon: LayoutDashboard },
         { name: 'Donation Batches', path: '/ngo/donation-batches', icon: Ticket },
+        { name: 'Register Donor', path: '/ngo/donors/new', icon: UserPlus },
+        { name: 'Impact Analytics', path: '/ngo/analytics', icon: BarChart3 },
         { name: 'Volunteers', path: '/ngo/volunteers', icon: Users },
         { name: 'Regional Demand', path: '/statistics/regional', icon: Activity },
-        commonItems[1]
+        settingsItem
       ];
     }
-    
+
     if (role === 'bloodbank') {
       return [
-        commonItems[0],
+        { name: 'Dashboard', path: '/dashboard/bloodbank', icon: LayoutDashboard },
         { name: 'Ticket Management', path: '/bloodbank/tickets', icon: Ticket },
-        { name: 'Inventory', path: '/bloodbank/inventory', icon: Droplet },
-        { name: 'Analytics', path: '/statistics/overview', icon: BarChart3 },
-        commonItems[1]
+        { name: 'Inventory', path: '/bloodbank/inventory', icon: Package },
+        { name: 'Bank Analytics', path: '/bloodbank/analytics', icon: BarChart3 },
+        { name: 'Statistics', path: '/statistics/overview', icon: Activity },
+        settingsItem
       ];
     }
-    
-    return commonItems;
+
+    return fallbackItems;
   };
 
   const navItems = getNavItems();

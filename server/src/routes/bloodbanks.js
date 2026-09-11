@@ -1,5 +1,8 @@
 const express = require('express');
 const prisma = require('../config/db');
+const authenticate = require('../middleware/authenticate');
+const authorize = require('../middleware/authorize');
+const { getPagination, handlePrismaError } = require('../utils/validation');
 const router = express.Router();
 
 function formatBloodType(type) {
@@ -12,7 +15,9 @@ function parseBloodType(d) {
 }
 
 // GET /api/bloodbanks
-router.get('/', async (req, res) => {
+// PROTECTED — hospital availability checks and NGO batch dispatch need the
+// bank directory, but it is not public. BLOODBANK users use /api/inventory.
+router.get('/', authenticate, authorize('HOSPITAL', 'NGO', 'ADMIN'), async (req, res) => {
   try {
     const { state, city, type, search } = req.query;
     const where = {};
@@ -32,15 +37,21 @@ router.get('/', async (req, res) => {
         bloodTypeFilter = type.includes('_') ? type : parseBloodType(type);
     }
 
-    const bloodBanks = await prisma.bloodBank.findMany({
-      where,
-      include: {
-        inventory: bloodTypeFilter ? {
-            where: { bloodType: bloodTypeFilter }
-        } : true
-      },
-      take: 50
-    });
+    const { page, limit, skip } = getPagination(req.query, { defaultLimit: 20, maxLimit: 50 });
+    const [bloodBanks, total] = await Promise.all([
+      prisma.bloodBank.findMany({
+        where,
+        include: {
+          inventory: bloodTypeFilter ? {
+              where: { bloodType: bloodTypeFilter }
+          } : true
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.bloodBank.count({ where }),
+    ]);
     
     const formattedBanks = bloodBanks.map(bb => {
       const sortedInventory = bb.inventory.sort((a, b) => {
@@ -69,10 +80,9 @@ router.get('/', async (req, res) => {
       };
     });
 
-    res.json(formattedBanks);
+    res.json({ banks: formattedBanks, total, page, limit });
   } catch (error) {
-    console.error('Fetch blood banks error:', error);
-    res.status(500).json({ error: 'Failed to fetch blood banks' });
+    handlePrismaError(res, error, 'Failed to fetch blood banks');
   }
 });
 

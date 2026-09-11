@@ -21,19 +21,21 @@ export default function Regional() {
   const { bloodType, region, timeRange } = useOutletContext();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     const fetchRegional = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await api.get('/stats/regional', {
           params: { bloodType, state: region, months: timeRange.replace('M', '') }
         });
-        setRows(response.data);
+        setRows(Array.isArray(response.data) ? response.data : []);
         setExpanded({});
       } catch (err) {
-        console.error('Failed to fetch regional stats', err);
+        setError(err.response?.data?.error || 'Failed to fetch regional stats');
       } finally {
         setLoading(false);
       }
@@ -66,7 +68,15 @@ export default function Regional() {
     return 'Adequate';
   };
 
-  if (loading) return <div className="animate-pulse h-64 bg-gray-200 rounded-xl"></div>;
+  if (loading) return <div className="animate-pulse h-64 bg-gray-200 dark:bg-white/10 rounded-xl"></div>;
+
+  if (error) {
+    return (
+      <Card>
+        <p className="text-sm text-red-800 dark:text-red-300 text-center py-6">{error}</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

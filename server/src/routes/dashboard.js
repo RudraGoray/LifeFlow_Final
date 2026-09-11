@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../config/db');
 const authenticate = require('../middleware/authenticate');
+const resolveBank = require('../utils/resolveBank');
 
 const router = express.Router();
 
@@ -8,10 +9,17 @@ const router = express.Router();
 router.use(authenticate);
 
 // ─── GET /api/dashboard/:role ────────────────────────
+// Users may only fetch their own role's dashboard (ADMIN bypasses).
 router.get('/:role', async (req, res) => {
   try {
     const { role } = req.params;
     const user = req.user;
+
+    if (user.role !== 'ADMIN' && role.toUpperCase() !== user.role) {
+      return res.status(403).json({
+        error: `Access denied. You cannot view the ${role} dashboard with a ${user.role} account.`,
+      });
+    }
 
     switch (role.toUpperCase()) {
       case 'HOSPITAL':
@@ -29,9 +37,111 @@ router.get('/:role', async (req, res) => {
   }
 });
 
+// ─── GET /api/dashboard/ngo/impact ───────────────────
+// Server-side impact analytics over FULL history (no take-cap truncation):
+// monthly collections vs new donors, cumulative donor growth, funnel, top camps.
+// NGO sees own org + region; ADMIN may pass ngoId/state/city.
+router.get('/ngo/impact', async (req, res) => {
+  try {
+    const months = Math.min(Math.max(parseInt(req.query.months, 10) || 6, 1), 24);
+    let ngoId, state, city;
+    if (req.user.role === 'NGO') {
+      ngoId = req.user.orgId;
+      state = req.user.state;
+      city = req.user.cityDistrict;
+    } else if (req.user.role === 'ADMIN') {
+      ngoId = req.query.ngoId || undefined;
+      state = req.query.state || undefined;
+      city = req.query.city || undefined;
+    } else {
+      return res.status(403).json({ error: 'Access denied. NGO impact is visible to NGOs and admins only.' });
+    }
+
+    const batchWhere = ngoId ? { ngoId } : {};
+    const donorWhere = {};
+    if (state) donorWhere.state = state;
+    if (city) donorWhere.cityDistrict = city;
+
+    const [batches, donors] = await Promise.all([
+      prisma.donationBatch.findMany({
+        where: batchWhere,
+        select: { campName: true, units: true, donorCount: true, status: true, submittedAt: true },
+      }),
+      prisma.donor.findMany({ where: donorWhere, select: { registeredAt: true } }),
+    ]);
+
+    const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()}`;
+    const buckets = [];
+    const cursor = new Date();
+    cursor.setMonth(cursor.getMonth() - (months - 1), 1);
+    cursor.setHours(0, 0, 0, 0);
+    for (let i = 0; i < months; i++) {
+      buckets.push({
+        key: keyOf(cursor),
+        month: cursor.toLocaleString('default', { month: 'short' }),
+        collected: 0,
+        donors: 0,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    let confirmedUnits = 0;
+    let confirmed = 0;
+    let pending = 0;
+    const byCamp = {};
+    for (const b of batches) {
+      if (b.status === 'CONFIRMED' || b.status === 'FULFILLED') {
+        confirmed += 1;
+        confirmedUnits += b.units || 0;
+        const bucket = buckets.find((x) => x.key === keyOf(new Date(b.submittedAt)));
+        if (bucket) bucket.collected += b.units || 0;
+      } else if (b.status === 'PENDING') {
+        pending += 1;
+      }
+      const c = byCamp[b.campName] || (byCamp[b.campName] = { campName: b.campName, units: 0, donors: 0, batches: 0 });
+      c.units += b.units || 0;
+      c.donors += b.donorCount || 0;
+      c.batches += 1;
+    }
+    for (const d of donors) {
+      const bucket = buckets.find((x) => x.key === keyOf(new Date(d.registeredAt)));
+      if (bucket) bucket.donors += 1;
+    }
+
+    const firstKey = buckets[0]?.key || '';
+    let running = donors.filter((d) => keyOf(new Date(d.registeredAt)) < firstKey).length;
+    const growth = buckets.map((b) => {
+      running += b.donors;
+      return { month: b.month, total: running };
+    });
+
+    res.json({
+      monthly: buckets.map(({ key, ...rest }) => rest),
+      growth,
+      totals: {
+        collected: confirmedUnits,
+        confirmed,
+        pending,
+        donorsInRegion: donors.length,
+      },
+      topCamps: Object.values(byCamp).sort((a, b) => b.units - a.units).slice(0, 5),
+    });
+  } catch (error) {
+    console.error('NGO impact error:', error);
+    res.status(500).json({ error: 'Failed to fetch impact analytics.' });
+  }
+});
+
 // ─── GET /api/feed/:orgId ────────────────────────────
+// Users may only fetch their own organisation's feed (ADMIN bypasses).
 router.get('/feed/:orgId', async (req, res) => {
   try {
+    if (req.user.role !== 'ADMIN' && req.params.orgId !== req.user.orgId) {
+      return res.status(403).json({
+        error: 'Access denied. You cannot view another organisation\'s activity feed.',
+      });
+    }
+
     // Build an activity feed from recent tickets and batches
     const recentDemands = await prisma.demandTicket.findMany({
       where: { hospitalId: req.params.orgId },
@@ -113,6 +223,21 @@ async function getHospitalDashboard(user) {
 
   const fulfillmentRate = allTickets > 0 ? Math.round((fulfilledTickets / allTickets) * 100) : 0;
 
+  // Fridge-stock snapshot (auto-created as zeros for new hospitals)
+  let inventoryRows = [];
+  if (user.orgId) {
+    const have = await prisma.hospitalInventory.findMany({ where: { hospitalId: user.orgId } });
+    inventoryRows = have;
+    if (have.length === 0) {
+      const types = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
+      await prisma.hospitalInventory.createMany({
+        data: types.map((bloodType) => ({ hospitalId: user.orgId, bloodType, units: 0, statusLevel: 'CRITICAL' })),
+        skipDuplicates: true,
+      });
+      inventoryRows = await prisma.hospitalInventory.findMany({ where: { hospitalId: user.orgId }, orderBy: { bloodType: 'asc' } });
+    }
+  }
+
   return {
     role: 'HOSPITAL',
     stats: {
@@ -120,7 +245,10 @@ async function getHospitalDashboard(user) {
       fulfillmentRate: { value: fulfillmentRate, trend: '+4.2%' },
       criticalShortages: { value: criticalTypes.length, types: criticalTypes.map(t => formatBloodType(t.bloodType)) },
       pendingDonations: { value: pendingDonations },
+      fridgeUnits: { value: inventoryRows.reduce((s, r) => s + r.units, 0) },
+      fridgeCritical: { value: inventoryRows.filter(r => r.statusLevel === 'CRITICAL').length },
     },
+    inventory: inventoryRows.map(r => ({ bloodType: formatBloodType(r.bloodType), units: r.units, statusLevel: r.statusLevel })),
   };
 }
 
@@ -148,6 +276,11 @@ async function getNGODashboard(user) {
     }),
   ]);
 
+  // Donors registered in the NGO's region
+  const donorsRegistered = await prisma.donor.count({
+    where: { state: user.state, cityDistrict: user.cityDistrict },
+  });
+
   return {
     role: 'NGO',
     stats: {
@@ -155,6 +288,7 @@ async function getNGODashboard(user) {
       totalCollected: { value: totalCollected._sum.units || 0 },
       pendingBatches: { value: pendingBatches },
       activeVolunteers: { value: Math.floor(Math.random() * 50) + 20 },
+      donorsRegistered: { value: donorsRegistered },
     },
     recentBatches: recentBatches.map(b => ({
       id: b.id,
@@ -185,6 +319,20 @@ async function getBloodBankDashboard(user) {
   const criticalCount = inventoryHealth.filter(i => i.statusLevel === 'CRITICAL').length;
   const lowCount = inventoryHealth.filter(i => i.statusLevel === 'LOW').length;
 
+  // Per-type stock for the caller's own bank (for the dashboard inventory widget)
+  let ownBank = null;
+  let ownInventory = [];
+  try {
+    const resolved = await resolveBank(user);
+    if (resolved.bank) {
+      ownBank = { bloodBankId: resolved.bank.bloodBankId, name: resolved.bank.name };
+      ownInventory = await prisma.bloodInventory.findMany({
+        where: { bloodBankId: resolved.bank.bloodBankId },
+        orderBy: { bloodType: 'asc' },
+      });
+    }
+  } catch (e) { console.error('Own-bank inventory lookup failed:', e.message); }
+
   return {
     role: 'BLOODBANK',
     stats: {
@@ -198,6 +346,13 @@ async function getBloodBankDashboard(user) {
         adequate: inventoryHealth.length - criticalCount - lowCount,
       },
     },
+    bank: ownBank,
+    inventory: ownInventory.map(i => ({
+      bloodType: formatBloodType(i.bloodType),
+      units: i.units,
+      statusLevel: i.statusLevel,
+      updatedAt: i.updatedAt,
+    })),
   };
 }
 

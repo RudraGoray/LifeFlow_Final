@@ -13,7 +13,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-off-white overflow-hidden">
+    <div className="flex h-screen bg-off-white dark:bg-[#121012] overflow-hidden">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 

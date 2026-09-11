@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
+  /* Legacy tokens (kept for existing pages) */
   --color-primary-crimson: #B91C3C;
   --color-primary-crimson-dark: #8F1530;
-  --color-charcoal: #2B2B2E;
   --color-off-white: #F7F6F4;
   --color-card-white: #FFFFFF;
   --color-success-green: #16A34A;
@@ -12,12 +15,315 @@
   --color-info-blue: #0EA5A0;
   --color-muted-gray: #6B7280;
   --color-border-gray: #E5E7EB;
-  
+
+  /* ── Reference palette: warm clinical canvas ── */
+  --color-cream-50: #FDFBF7;
+  --color-cream-100: #FAF6F2;
+  --color-cream-200: #F3ECE5;
+  --color-cream-300: #EBE2D7;
+  --color-cream-400: #E0D4C5;
+  --color-cream: #FAF6F2;
+
+  --color-sand-light: #FAF6F2;
+  --color-sand: #F5EFEB;
+  --color-sand-muted: #EFE8E0;
+  --color-sand-dark: #E2D8CC;
+
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #FCFAF7;
+
+  --color-charcoal: #181516;
+  --color-charcoal-muted: #57534E;
+  --color-charcoal-subtle: #78716C;
+  --color-charcoal-faint: #A8A29E;
+  --color-charcoal-border: #EBE3DA;
+  --color-charcoal-50: #F7F6F5;
+  --color-charcoal-100: #E6E4E2;
+  --color-charcoal-200: #C4C1BE;
+  --color-charcoal-300: #A8A29E;
+  --color-charcoal-400: #78716C;
+  --color-charcoal-500: #57534E;
+  --color-charcoal-600: #44403C;
+  --color-charcoal-700: #292524;
+  --color-charcoal-800: #1C1917;
+  --color-charcoal-900: #181516;
+
+  --color-crimson-50: #FFF1F3;
+  --color-crimson-100: #FFE4E8;
+  --color-crimson-200: #FECDD6;
+  --color-crimson-300: #FDA4B5;
+  --color-crimson-400: #FB7185;
+  --color-crimson-500: #E11D48;
+  --color-crimson-600: #C41E3A;
+  --color-crimson-700: #9E152D;
+  --color-crimson-800: #781022;
+  --color-crimson-900: #4C0B16;
+  --color-crimson-glow: rgba(196, 30, 58, 0.18);
+  --color-crimson: #C41E3A;
+
+  --color-coral: #FF6B6B;
+  --color-coral-light: #FF8787;
+  --color-coral-soft: #FFF0F0;
+
+  --color-emerald: #059669;
+  --color-emerald-light: #34D399;
+  --color-emerald-soft: #ECFDF5;
+
+  --color-amber: #D97706;
+  --color-amber-light: #FBBF24;
+  --color-amber-soft: #FFFBEB;
+
+  --color-warm-border: #EBE3DA;
+  --color-warm-border-light: #F4EFE9;
+  --color-warm-border-dark: #DDD3C7;
+
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --font-family-sans: 'Inter', system-ui, sans-serif;
+
+  --shadow-crafted-sm: 0 1px 2px rgba(24, 21, 22, 0.04), 0 2px 6px rgba(24, 21, 22, 0.02);
+  --shadow-crafted: 0 1px 3px rgba(24, 21, 22, 0.04), 0 6px 20px rgba(24, 21, 22, 0.03);
+  --shadow-crafted-hover: 0 2px 6px rgba(24, 21, 22, 0.04), 0 16px 36px rgba(24, 21, 22, 0.07);
+  --shadow-crafted-lift: 0 4px 12px rgba(24, 21, 22, 0.05), 0 24px 48px rgba(24, 21, 22, 0.08);
+  --shadow-crimson-sm: 0 2px 8px rgba(196, 30, 58, 0.25);
+  --shadow-crimson-lg: 0 8px 24px -4px rgba(196, 30, 58, 0.35);
+
+  --animate-heartbeat: heartbeat 1.6s ease-in-out infinite;
+  --animate-ecg-dash: ecg-dash 3s linear infinite;
+  --animate-breathe-red: breathe-red 3.4s ease-in-out infinite;
+  --animate-pulse-glow-border: pulse-glow-border 3.4s ease-in-out infinite;
+  --animate-float-gentle: float-gentle 4s ease-in-out infinite;
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.12); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.07); }
+    70% { transform: scale(1); }
+  }
+  @keyframes ecg-dash {
+    0% { stroke-dashoffset: 1000; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes breathe-red {
+    0%, 100% { opacity: 0.35; transform: scale(0.94); }
+    50% { opacity: 0.85; transform: scale(1.12); }
+  }
+  @keyframes pulse-glow-border {
+    0%, 100% { box-shadow: 0 0 30px 0 rgba(196,30,58,0.25), inset 0 0 60px 0 rgba(196,30,58,0.06); }
+    50% { box-shadow: 0 0 70px 8px rgba(255,42,68,0.45), inset 0 0 90px 0 rgba(196,30,58,0.14); }
+  }
+  @keyframes float-gentle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
-  background-color: var(--color-off-white);
-  color: var(--color-charcoal);
-  font-family: var(--font-family-sans);
+  background-color: #FAF6F2;
+  color: #181516;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: rgba(196, 30, 58, 0.12);
+  color: #9E152D;
+}
+
+/* Tactile warm scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF6F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #DFD6CC;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C41E3A;
+}
+
+/* ─── Hand-crafted cards ─── */
+.card-crafted {
+  background: #FFFFFF;
+  border: 1px solid #EBE3DA;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(24, 21, 22, 0.04), 0 6px 20px rgba(24, 21, 22, 0.03);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-crafted:hover {
+  border-color: #DDD3C7;
+  box-shadow: 0 2px 6px rgba(24, 21, 22, 0.04), 0 16px 36px rgba(24, 21, 22, 0.07);
+  transform: translateY(-2px);
+}
+.card-crafted-flat {
+  background: #FFFFFF;
+  border: 1px solid #EBE3DA;
+  border-radius: 1rem;
+}
+.card-crafted-tint {
+  background: #FAF6F2;
+  border: 1px solid #EAE1D7;
+  border-radius: 1rem;
+}
+
+/* ─── Button architecture ─── */
+.btn-crimson {
+  background-color: #C41E3A;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(196, 30, 58, 0.25);
+  transition: all 0.2s ease;
+}
+.btn-crimson:hover {
+  background-color: #9E152D;
+  box-shadow: 0 8px 24px -4px rgba(196, 30, 58, 0.35);
+}
+.btn-crimson:active {
+  transform: scale(0.98);
+}
+.btn-outline {
+  background-color: #FFFFFF;
+  color: #181516;
+  border: 1px solid #EBE3DA;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(24, 21, 22, 0.04), 0 2px 6px rgba(24, 21, 22, 0.02);
+  transition: all 0.2s ease;
+}
+.btn-outline:hover {
+  background-color: #FAF6F2;
+  border-color: #78716C;
+}
+.btn-outline:active {
+  transform: scale(0.98);
+}
+.btn-ghost {
+  color: #57534E;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  color: #181516;
+  background-color: rgba(245, 239, 235, 0.7);
+}
+
+/* ─── Dark mode base (applies when <html class="dark">) ─── */
+.dark body {
+  background-color: #121012;
+  color: #EDE9E6;
+}
+.dark .card-crafted {
+  background: #1C1917;
+  border-color: #332e2b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+.dark .card-crafted:hover {
+  border-color: #4a4340;
+}
+.dark .card-crafted-flat {
+  background: #1C1917;
+  border-color: #332e2b;
+}
+.dark .card-crafted-tint {
+  background: #1a1715;
+  border-color: #2e2a27;
+}
+.dark .btn-outline {
+  background-color: #1C1917;
+  color: #EDE9E6;
+  border-color: #3a3532;
+}
+.dark .btn-outline:hover {
+  background-color: #292524;
+  border-color: #57534E;
+}
+.dark .bg-grid-warm {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+.dark ::-webkit-scrollbar-track {
+  background: #121012;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #44403C;
+}
+
+/* ─── Dark remap for hardcoded light surfaces ───
+   Public pages use fixed cream/white utilities; remap them under .dark
+   so page backgrounds (not just cards/text) follow the theme toggle. */
+.dark .bg-off-white { background-color: #121012; }
+.dark .bg-white { background-color: #1C1917; }
+.dark .bg-gray-50 { background-color: rgba(255, 255, 255, 0.04); }
+.dark .bg-gray-100 { background-color: rgba(255, 255, 255, 0.08); }
+.dark .bg-\[\#FAF6F2\] { background-color: #121012; }
+.dark .bg-\[\#F5EFEB\] { background-color: #1a1715; }
+.dark .text-charcoal { color: #EDE9E6; }
+.dark .text-charcoal-muted { color: #A8A29E; }
+.dark .text-charcoal-subtle { color: #8a8580; }
+.dark .text-primary-crimson { color: #FB7185; }
+.dark .border-border-gray { border-color: #332e2b; }
+.dark .border-\[\#EBE3DA\] { border-color: #332e2b; }
+.dark .divide-border-gray > :not([hidden]) ~ :not([hidden]) { border-color: #332e2b; }
+.dark .hover\:bg-gray-50:hover { background-color: rgba(255, 255, 255, 0.06); }
+.dark .hover\:bg-gray-100:hover { background-color: rgba(255, 255, 255, 0.08); }
+.dark .hover\:text-charcoal:hover { color: #FFFFFF; }
+.dark .hover\:bg-red-50:hover { background-color: rgba(196, 30, 58, 0.15); }
+
+/* ─── Typography moments / utilities ─── */
+.text-stroke-hero {
+  -webkit-text-stroke: 1.5px rgba(24, 21, 22, 0.08);
+  color: transparent;
+  user-select: none;
+}
+.text-stroke-crimson {
+  -webkit-text-stroke: 1px rgba(196, 30, 58, 0.25);
+  color: transparent;
+}
+.text-gradient-crimson {
+  background: linear-gradient(135deg, #C41E3A 0%, #D42845 50%, #FF6B6B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.bg-grid-warm {
+  background-image:
+    linear-gradient(to right, rgba(24, 21, 22, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(24, 21, 22, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
 }

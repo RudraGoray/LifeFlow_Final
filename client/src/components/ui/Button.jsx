@@ -2,9 +2,9 @@ import React from 'react';
 
 const variantStyles = {
   primary: 'bg-primary-crimson text-white hover:bg-primary-crimson-dark border border-transparent',
-  secondary: 'bg-white text-charcoal border border-border-gray hover:bg-gray-50',
+  secondary: 'bg-white dark:bg-white/5 text-charcoal dark:text-white border border-border-gray dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10',
   danger: 'bg-danger-red text-white hover:bg-red-700 border border-transparent',
-  ghost: 'bg-transparent text-charcoal hover:bg-gray-100 border border-transparent',
+  ghost: 'bg-transparent text-charcoal dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 border border-transparent',
 };
 
 const sizeStyles = {
