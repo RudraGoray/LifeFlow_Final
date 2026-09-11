@@ -357,21 +357,21 @@ export default function ViewBloodAvailable() {
                       ? 'bg-crimson-50/80 border-crimson-300'
                       : isWarn
                       ? 'bg-amber-50/80 border-amber-300'
-                      : 'bg-[#FAF6F2] border-[#EBE3DA]'
+                      : 'bg-emerald-50/70 border-emerald-200'
                   }`}
                 >
                   <div className="flex items-center justify-between text-[11px] font-heading font-extrabold mb-1">
-                    <span className="text-charcoal">{item.group}</span>
+                    <span className={isCrit ? 'text-charcoal' : isWarn ? 'text-charcoal' : 'text-emerald-800'}>{item.group}</span>
                     <span
                       className={`w-2 h-2 rounded-full ${
                         isCrit ? 'bg-crimson animate-ping' : isWarn ? 'bg-amber' : 'bg-emerald'
                       }`}
                     />
                   </div>
-                  <div className={`font-heading font-bold text-lg ${isCrit ? 'text-crimson' : isWarn ? 'text-amber-700' : 'text-charcoal'}`}>
+                  <div className={`font-heading font-bold text-lg ${isCrit ? 'text-crimson' : isWarn ? 'text-amber-700' : 'text-emerald-700'}`}>
                     {item.units} <span className="text-[10px] font-normal text-charcoal-subtle">u</span>
                   </div>
-                  <div className="text-[9px] font-mono text-charcoal-subtle">
+                  <div className={`text-[9px] font-mono ${isCrit || isWarn ? 'text-charcoal-subtle' : 'text-emerald-600'}`}>
                     {isCrit ? 'Acute' : isWarn ? 'Low' : 'Healthy'}
                   </div>
                 </div>
@@ -453,11 +453,11 @@ export default function ViewBloodAvailable() {
                             ? 'bg-crimson-50 border-crimson-300'
                             : isWarn
                             ? 'bg-amber-50 border-amber-300'
-                            : 'bg-white border-[#EBE3DA]'
+                            : 'bg-emerald-50/70 border-emerald-200'
                         }`}
                       >
                         <div className="flex items-center justify-between text-[11px] font-heading font-extrabold mb-1">
-                          <span className={isCrit ? 'text-crimson' : isWarn ? 'text-amber-800' : 'text-charcoal'}>
+                          <span className={isCrit ? 'text-crimson' : isWarn ? 'text-amber-800' : 'text-emerald-800'}>
                             {item.group}
                           </span>
                           <span
@@ -468,7 +468,7 @@ export default function ViewBloodAvailable() {
                         </div>
                         <div
                           className={`font-heading font-black text-base ${
-                            isCrit ? 'text-crimson' : isWarn ? 'text-amber-700' : 'text-charcoal'
+                            isCrit ? 'text-crimson' : isWarn ? 'text-amber-700' : 'text-emerald-700'
                           }`}
                         >
                           {item.units}
@@ -557,7 +557,7 @@ export default function ViewBloodAvailable() {
                             ? 'bg-crimson-50 border-crimson-300'
                             : s.status === 'warning'
                             ? 'bg-amber-50 border-amber-300'
-                            : 'bg-[#FAF6F2] border-[#EBE3DA]'
+                            : 'bg-emerald-50/70 border-emerald-200'
                         }`}
                       >
                         <div className="font-heading font-black text-sm">{s.group}</div>

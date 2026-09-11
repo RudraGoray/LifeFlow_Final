@@ -25,6 +25,7 @@ import BrandMotif from '../components/BrandMotif'
 import PulseIndicator from '../components/PulseIndicator'
 import AnimatedCounter from '../components/AnimatedCounter'
 import MagneticButton from '../components/MagneticButton'
+import BeatingHeart from '../components/BeatingHeart'
 
 // ─── Data: Clinical Telemetry & Verified Camps ───────────────────────────────
 
@@ -315,55 +316,64 @@ function Hero() {
           </MagneticButton>
         </motion.div>
 
-        {/* Arterial Telemetry Bar (Light tactile instrument surface) */}
+        {/* Arterial Telemetry Bar — black surface, breathing red, live beating heart */}
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="max-w-3xl mx-auto bg-white border border-[#EBE3DA] rounded-2xl shadow-crafted-lift p-6"
+          className="max-w-3xl mx-auto relative rounded-2xl overflow-hidden bg-[#050506] border border-crimson-900/40 animate-pulse-glow-border p-6"
         >
-          {/* Animated ECG Pulse Top Line */}
-          <div className="mb-4 pb-3 border-b border-[#EBE3DA] flex items-center justify-between">
+          {/* Ambient breathing red glow field */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[220%] rounded-full bg-crimson/25 blur-3xl animate-breathe-red" />
+            <div className="absolute inset-0 bg-[radial-gradient(120%_120%_at_50%_0%,rgba(196,30,58,0.12),transparent_60%)]" />
+          </div>
+
+          {/* Header row: label + ECG trace + beating heart */}
+          <div className="relative mb-4 pb-3 border-b border-white/10 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-crimson" />
-              <span className="text-xs font-heading font-semibold text-charcoal uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-crimson animate-pulse" />
+              <span className="text-xs font-heading font-semibold text-white/90 uppercase tracking-wider">
                 National Pulse Telemetry
               </span>
             </div>
-            <div className="w-48 sm:w-64">
-              <BrandMotif variant="ecg-trace" accent="#C41E3A" />
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block w-32 md:w-44">
+                <BrandMotif variant="ecg-trace" accent="#FF3B57" />
+              </div>
+              <BeatingHeart size={34} />
             </div>
           </div>
 
           {/* Three Live Stats */}
-          <div className="grid grid-cols-3 divide-x divide-[#EBE3DA]">
+          <div className="relative grid grid-cols-3 divide-x divide-white/10">
             <div className="px-3 text-center">
-              <div className="text-xs text-charcoal-subtle font-body mb-1">Available Units</div>
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-charcoal">
+              <div className="text-xs text-white/50 font-body mb-1">Available Units</div>
+              <div className="font-heading font-bold text-2xl sm:text-3xl text-white">
                 <AnimatedCounter value={2847} duration={2} />
               </div>
               <div className="mt-1 flex items-center justify-center gap-1.5">
-                <PulseIndicator variant="ok" size="sm" label="Normal Reserve" />
+                <PulseIndicator variant="ok" size="sm" label="Normal Reserve" dark />
               </div>
             </div>
 
             <div className="px-3 text-center">
-              <div className="text-xs text-charcoal-subtle font-body mb-1">Median Transit Response</div>
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-charcoal">
-                18.4<span className="text-base text-charcoal-subtle font-medium">m</span>
+              <div className="text-xs text-white/50 font-body mb-1">Median Transit Response</div>
+              <div className="font-heading font-bold text-2xl sm:text-3xl text-white">
+                18.4<span className="text-base text-white/50 font-medium">m</span>
               </div>
               <div className="mt-1 flex items-center justify-center gap-1.5">
-                <PulseIndicator variant="warning" size="sm" label="Active Dispatch" />
+                <PulseIndicator variant="warning" size="sm" label="Active Dispatch" dark />
               </div>
             </div>
 
             <div className="px-3 text-center">
-              <div className="text-xs text-charcoal-subtle font-body mb-1">Priority Triage Open</div>
-              <div className="font-heading font-bold text-2xl sm:text-3xl text-crimson">
+              <div className="text-xs text-white/50 font-body mb-1">Priority Triage Open</div>
+              <div className="font-heading font-bold text-2xl sm:text-3xl text-crimson-400">
                 <AnimatedCounter value={7} duration={1.5} />
               </div>
               <div className="mt-1 flex items-center justify-center gap-1.5">
-                <PulseIndicator variant="critical" size="sm" label="Urgent Match" />
+                <PulseIndicator variant="critical" size="sm" label="Urgent Match" dark />
               </div>
             </div>
           </div>

@@ -4,22 +4,22 @@ import React from 'react'
  * PulseIndicator — shows a delicate pulsing live dot + label for arterial urgency states.
  * variant: 'critical' (crimson) | 'warning' (amber) | 'ok' (emerald)
  */
-export default function PulseIndicator({ variant = 'critical', label, size = 'md', className = '' }) {
+export default function PulseIndicator({ variant = 'critical', label, size = 'md', className = '', dark = false }) {
   const variants = {
     critical: {
       dot: 'bg-crimson',
       ring: 'bg-crimson/25',
-      text: 'text-crimson-700',
+      text: dark ? 'text-crimson-300' : 'text-crimson-700',
     },
     warning: {
       dot: 'bg-amber',
       ring: 'bg-amber/25',
-      text: 'text-amber-700',
+      text: dark ? 'text-amber-300' : 'text-amber-700',
     },
     ok: {
       dot: 'bg-emerald',
       ring: 'bg-emerald/25',
-      text: 'text-emerald-700',
+      text: dark ? 'text-emerald-300' : 'text-emerald-700',
     },
   }
 

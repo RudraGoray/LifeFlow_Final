@@ -102,11 +102,21 @@ export default {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-6px)' },
         },
+        'breathe-red': {
+          '0%, 100%': { opacity: '0.35', transform: 'scale(0.94)' },
+          '50%': { opacity: '0.85', transform: 'scale(1.12)' },
+        },
+        'pulse-glow-border': {
+          '0%, 100%': { boxShadow: '0 0 30px 0 rgba(196,30,58,0.25), inset 0 0 60px 0 rgba(196,30,58,0.06)' },
+          '50%': { boxShadow: '0 0 70px 8px rgba(255,42,68,0.45), inset 0 0 90px 0 rgba(196,30,58,0.14)' },
+        },
       },
       animation: {
         heartbeat: 'heartbeat 1.6s ease-in-out infinite',
         'ecg-dash': 'ecg-dash 3s linear infinite',
         'float-gentle': 'float-gentle 4s ease-in-out infinite',
+        'breathe-red': 'breathe-red 3.4s ease-in-out infinite',
+        'pulse-glow-border': 'pulse-glow-border 3.4s ease-in-out infinite',
       },
     },
   },
