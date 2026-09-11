@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuth, ROLE_META } from '../context/AuthContext'
 import PulseIndicator from '../components/PulseIndicator'
+import { api } from '../lib/api'
 
 // ─── Sidebar config per role ──────────────────────────────────────────────────
 
@@ -386,6 +387,17 @@ function DashboardContent({ role }) {
   const meta = ROLE_META[role]
   const layout = WIDGET_LAYOUTS[role] || WIDGET_LAYOUTS.hospital
 
+  const [stats, setStats] = useState(null)
+  const [statsError, setStatsError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get('/stats/live')
+      .then((data) => { if (!cancelled) setStats(data) })
+      .catch((err) => { if (!cancelled) setStatsError(err.message) })
+    return () => { cancelled = true }
+  }, [])
+
   const greetingTime = () => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -412,10 +424,18 @@ function DashboardContent({ role }) {
 
           {/* Urgency notice */}
           <div className="glass-card px-4 py-3 flex items-center gap-3 border-amber-500/20 shrink-0">
-            <PulseIndicator variant="warning" size="sm" />
+            <PulseIndicator variant={statsError ? 'critical' : 'warning'} size="sm" />
             <div>
-              <div className="text-white text-sm font-body font-semibold">System Active</div>
-              <div className="text-gray-500 text-xs font-body">Last sync: just now</div>
+              <div className="text-white text-sm font-body font-semibold">
+                {statsError ? 'Sync Failed' : stats ? 'System Active' : 'Connecting…'}
+              </div>
+              <div className="text-gray-500 text-xs font-body">
+                {statsError
+                  ? statsError
+                  : stats
+                    ? `Last sync: ${new Date(stats.generatedAt).toLocaleTimeString()}`
+                    : 'Last sync: just now'}
+              </div>
             </div>
           </div>
         </div>
@@ -424,10 +444,10 @@ function DashboardContent({ role }) {
       {/* Quick-stat row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Active Today',   value: '—', icon: Activity,   color: 'text-blue-400' },
-          { label: 'Alerts',         value: '—', icon: Bell,       color: 'text-crimson' },
-          { label: 'Pending',        value: '—', icon: ClipboardList, color: 'text-amber-400' },
-          { label: 'Fulfilled',      value: '—', icon: TrendingUp, color: 'text-emerald-400' },
+          { label: 'Active Today',   value: stats?.network?.bankCount,          icon: Activity,      color: 'text-blue-400' },
+          { label: 'Alerts',         value: stats?.tickets?.criticalDemand,     icon: Bell,          color: 'text-crimson' },
+          { label: 'Pending',        value: stats?.tickets?.pendingDemand,      icon: ClipboardList, color: 'text-amber-400' },
+          { label: 'Fulfilled',      value: stats?.tickets?.fulfilledToday,     icon: TrendingUp,    color: 'text-emerald-400' },
         ].map((s, i) => {
           const Icon = s.icon
           return (
@@ -442,7 +462,11 @@ function DashboardContent({ role }) {
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <div className="skeleton h-5 w-8 mb-1.5" />
+                {stats ? (
+                  <div className="text-white text-xl font-heading font-bold leading-none mb-1.5">{s.value ?? 0}</div>
+                ) : (
+                  <div className="skeleton h-5 w-8 mb-1.5" />
+                )}
                 <div className="text-gray-500 text-xs font-body">{s.label}</div>
               </div>
             </motion.div>
@@ -454,7 +478,9 @@ function DashboardContent({ role }) {
       <div>
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-heading font-semibold text-white text-lg">Dashboard Widgets</h2>
-          <span className="badge badge-warning text-xs">Populating soon</span>
+          <span className={`badge text-xs ${stats ? 'badge-ok' : 'badge-warning'}`}>
+            {stats ? 'Live' : 'Populating soon'}
+          </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {layout.widgets.map((w, i) => (

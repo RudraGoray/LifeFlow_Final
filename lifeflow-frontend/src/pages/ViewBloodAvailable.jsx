@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { api } from '../lib/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import AppNavbar from '../components/AppNavbar'
@@ -23,7 +24,7 @@ import {
   IconRefresh,
 } from '../components/Icons'
 
-const BLOOD_BANKS_DIRECTORY = [
+const FALLBACK_BANKS = [
   {
     id: 'bank_1',
     name: 'National Red Cross Central Blood Bank',
@@ -156,6 +157,15 @@ const BLOOD_BANKS_DIRECTORY = [
   },
 ]
 
+function timeAgo(isoString) {
+  if (!isoString) return 'just now'
+  const diffMs = Date.now() - new Date(isoString).getTime()
+  const mins = Math.max(0, Math.round(diffMs / 60000))
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`
+  return `${Math.round(mins / 60)} hr ago`
+}
+
 export default function ViewBloodAvailable() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState('all') // 'all' | 'O-' | 'O+' | 'A+' | etc
@@ -163,9 +173,27 @@ export default function ViewBloodAvailable() {
   const [maxDistance, setMaxDistance] = useState(50)
   const [inspectingBank, setInspectingBank] = useState(null)
 
+  // Live data, with the demo fallback shown instantly so the screen is never empty
+  // (Render free-tier backends cold-start, so don't block the UI on this fetch)
+  const [banks, setBanks] = useState(FALLBACK_BANKS)
+  const [isLive, setIsLive] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get('/blood-banks')
+      .then((data) => {
+        if (!cancelled && data?.banks?.length) {
+          setBanks(data.banks)
+          setIsLive(true)
+        }
+      })
+      .catch(() => { /* keep showing fallback data */ })
+    return () => { cancelled = true }
+  }, [])
+
   // Filtered Banks
   const filteredBanks = useMemo(() => {
-    return BLOOD_BANKS_DIRECTORY.filter((bank) => {
+    return banks.filter((bank) => {
       // Search match
       const q = searchQuery.toLowerCase()
       const matchesSearch =
@@ -198,9 +226,9 @@ export default function ViewBloodAvailable() {
 
       return matchesSearch && matchesDistance && matchesGroup && matchesUrgency
     })
-  }, [searchQuery, filterGroup, filterUrgency, maxDistance])
+  }, [banks, searchQuery, filterGroup, filterUrgency, maxDistance])
 
-  const apexBank = BLOOD_BANKS_DIRECTORY.find((b) => b.isApex) || BLOOD_BANKS_DIRECTORY[0]
+  const apexBank = banks.find((b) => b.isApex) || banks[0]
 
   return (
     <div className="min-h-screen bg-[#FAF6F2] text-charcoal flex flex-col font-body selection:bg-crimson/10 selection:text-crimson-700">
@@ -215,6 +243,7 @@ export default function ViewBloodAvailable() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAF6F2] border border-[#EBE3DA] text-xs font-heading font-semibold text-charcoal">
                 <IconBloodBank size={15} className="text-crimson" />
                 <span>Hospital Arterial Directory & Stock Live Feed</span>
+                <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald animate-pulse' : 'bg-charcoal-subtle/40'}`} title={isLive ? 'Live from backend' : 'Demo data'} />
               </div>
               <h1 className="font-heading font-bold text-3xl sm:text-4xl text-charcoal tracking-tight">
                 Live Blood Availability by Bank
@@ -417,7 +446,7 @@ export default function ViewBloodAvailable() {
                         {bank.distanceKm} km (~{bank.etaMinutes} mins)
                       </span>
                       <span>·</span>
-                      <span className="text-charcoal-subtle">Audit: {bank.lastAudit}</span>
+                      <span className="text-charcoal-subtle">Audit: {bank.lastAudit || timeAgo(bank.updatedAt)}</span>
                     </div>
                   </div>
 
